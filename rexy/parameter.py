@@ -1,12 +1,9 @@
 # coding:utf-8
 
-from collections import Sequence
-from .exceptions import (NotFileParameter,
-                         NotValueParameter,
-                         ParameterNotGiven)
+from collections import Mapping, Sequence
 
 
-class Series(Sequence):
+class Array(Sequence):
     def __init__(self, key, *sequence):
         self._key = key
         self._sequence = sequence
@@ -42,13 +39,13 @@ class Series(Sequence):
 
     @staticmethod
     def require_file(key, v):
-        if not Series.is_file(v):
+        if not Array.is_file(v):
             raise NotFileParameter(key)
         return v
 
     @staticmethod
     def require_value(key, v):
-        if not Series.is_value(v):
+        if not Array.is_value(v):
             raise NotValueParameter(key)
         return v
 
@@ -74,3 +71,38 @@ class Series(Sequence):
 
     def file(self, f=lambda name, typ, fp: (name, typ, fp)):
         return self.files(f)[0]
+
+
+class NotFileParameter(Exception):
+    pass
+
+
+class NotValueParameter(Exception):
+    pass
+
+
+class ParameterNotGiven(Exception):
+    pass
+
+
+class Group(Mapping):
+    ItemContainer = Array
+
+    def __init__(self, **mapping):
+        self._mapping = mapping
+
+    def __contains__(self, key):
+        return key in self._mapping
+
+    def __len__(self):
+        return len(self._mapping)
+
+    def __iter__(self):
+        for k in self._mapping:
+            yield k
+
+    def __getitem__(self, key):
+        return self.ItemContainer(key, *self._mapping.get(key, ()))
+
+    def __getattr__(self, name):
+        return self.__getitem__(name)

@@ -1,10 +1,10 @@
 # coding:utf-8
 
 from rexy.parameter import Group
-from rexy.parameter.series import Series
-from rexy.parameter.exceptions import (NotFileParameter,
-                                       NotValueParameter,
-                                       ParameterNotGiven)
+from rexy.parameter import (Array,
+                            NotFileParameter,
+                            NotValueParameter,
+                            ParameterNotGiven)
 
 
 def test_group():
@@ -13,9 +13,9 @@ def test_group():
     assert 'a' in grp
     assert 'c' not in grp
     assert set([k for k in grp]) == set(('a', 'b'))
-    assert [v for v in grp['b']] == [v for v in Series('', 3)]
-    assert [v for v in grp.b] == [v for v in Series('', 3)]
-    assert [v for v in grp.c] == [v for v in Series('')]
+    assert [v for v in grp['b']] == [v for v in Array('', 3)]
+    assert [v for v in grp.b] == [v for v in Array('', 3)]
+    assert [v for v in grp.c] == [v for v in Array('')]
 
 
 def test_series():

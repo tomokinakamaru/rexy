@@ -3,7 +3,7 @@
 import cgi
 from functools import wraps
 from .environ import Environ
-from .parameter import Group as ParamGroup
+from .parameter import Group
 
 try:
     from urlparse import parse_qs
@@ -12,8 +12,10 @@ except ImportError:
 
 
 class Rexy(object):
+    ParameterGroup = Group
+
     def __init__(self, environ):
-        self._environ = Environ(environ)
+        self._env = Environ(environ)
         self._cache = {}
 
     def __cache(f):
@@ -27,7 +29,7 @@ class Rexy(object):
 
     @property
     def env(self):
-        return self._environ
+        return self._env
 
     @property
     @__cache
@@ -44,12 +46,12 @@ class Rexy(object):
     @property
     @__cache
     def query(self):
-        return ParamGroup(**parse_qs(self.env.query_string or ''))
+        return self.ParameterGroup(**parse_qs(self.env.query_string or ''))
 
     @property
     @__cache
     def cookie(self):
-        return ParamGroup(**parse_qs(self.env.http_cookie or ''))
+        return self.ParameterGroup(**parse_qs(self.env.http_cookie or ''))
 
     @property
     @__cache
@@ -74,4 +76,4 @@ class Rexy(object):
                     else:
                         mapping[k] = [(obj.filename, obj.type, obj.file)]
 
-        return ParamGroup(**mapping)
+        return self.ParameterGroup(**mapping)
