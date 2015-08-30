@@ -1,8 +1,14 @@
 # coding;utf-8
 
+import cgi
 from functools import wraps
 from .environ import Environ
 from .parameter import Group as ParamGroup
+
+try:
+    from urlparse import parse_qs
+except ImportError:
+    from urllib.parse import parse_qs
 
 
 class Rexy(object):
@@ -53,7 +59,7 @@ class Rexy(object):
             for k in self.fieldstorage:
                 obj = self.fieldstorage[k]
                 if isinstance(obj, list):
-                    maping[k] = []
+                    mapping[k] = []
                     for fs in obj:
                         if fs.filename is None:
                             mapping[k].append(fs.value)
@@ -66,6 +72,6 @@ class Rexy(object):
                         mapping[k] = [obj.value]
 
                     else:
-                        mapping[k] = [(fs.filename, fs.type, fs.file)]
+                        mapping[k] = [(obj.filename, obj.type, obj.file)]
 
         return ParamGroup(**mapping)

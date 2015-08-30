@@ -63,6 +63,10 @@ class Environ(object):
         return self.get_wsgi('url_scheme')
 
     @property
+    def wsgi_input(self):
+        return self.get_wsgi('input')
+
+    @property
     def wsgi_errors(self):
         return self.get_wsgi('errors')
 
