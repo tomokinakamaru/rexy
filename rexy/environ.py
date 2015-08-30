@@ -1,5 +1,12 @@
 # coding:utf-8
 
+import datetime
+
+try:
+    from urlparse import parse_qs
+except ImportError:
+    from urllib.parse import parse_qs
+
 
 class Environ(object):
     def __init__(self, environ):
@@ -17,6 +24,17 @@ class Environ(object):
 
     def get_wsgi(self, key, default=None):
         return self.get('wsgi.' + key, default)
+
+    def get_qs(self, key, default=None):
+        v = self.get(key)
+        return default if v is None else parse_qs(v)
+
+    def get_dt(self, key, default=None):
+        v = self.get(key)
+        if v is None:
+            return default
+        else:
+            return datetime.strptime(s, '%a, %d %b %Y %H:%M:%S GMT')
 
     @property
     def method(self):

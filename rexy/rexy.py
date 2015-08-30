@@ -1,60 +1,52 @@
-# coding;utf-8
+# coding:utf-8
 
 import cgi
 from functools import wraps
 from .environ import Environ
 
-try:
-    from urlparse import parse_qs
-except ImportError:
-    from urllib.parse import parse_qs
+
+class cachedproperty(object):
+    def __init__(self, f):
+        self._f = f
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+
+        else:
+            if self._f.__name__ not in instance._cache:
+                instance._cache[self._f.__name__] = self._f(instance)
+
+            return instance._cache[self._f.__name__]
+
+    def __set__(self, instance, value):
+        raise AttributeError("can't set attribute")
+
+    def __delete__(self, instance):
+        del instance._cache[self._f.__name__]
 
 
 class Rexy(object):
-    ParameterGroup = dict
-
     def __init__(self, environ):
         self._env = Environ(environ)
         self._cache = {}
-
-    def __cache(f):
-        @wraps(f)
-        def _(self):
-            if f.__name__ not in self._cache:
-                self._cache[f.__name__] = f(self)
-
-            return self._cache[f.__name__]
-        return _
 
     @property
     def env(self):
         return self._env
 
-    @property
-    @__cache
+    @cachedproperty
     def body(self):
         clength = int(self.env.content_length or 0)
         return self.env.wsgi_input.read(clength)
 
-    @property
-    @__cache
+    @cachedproperty
     def fieldstorage(self):
         return cgi.FieldStorage(environ=self.env.environ,
                                 fp=self.env.wsgi_input)
 
-    @property
-    @__cache
-    def query(self):
-        return self.ParameterGroup(**parse_qs(self.env.query_string or ''))
-
-    @property
-    @__cache
-    def cookie(self):
-        return self.ParameterGroup(**parse_qs(self.env.http_cookie or ''))
-
-    @property
-    @__cache
-    def data(self):
+    @cachedproperty
+    def parsed_body(self):
         mapping = {}
         if isinstance(self.fieldstorage.value, list):
             for k in self.fieldstorage:
@@ -74,5 +66,4 @@ class Rexy(object):
 
                     else:
                         mapping[k] = [(obj.filename, obj.type, obj.file)]
-
-        return self.ParameterGroup(**mapping)
+        return mapping
