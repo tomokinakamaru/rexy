@@ -14,13 +14,13 @@ mt.run(background=True)
 @mt.req.get('/')
 def _(req):
     req = Rexy(req._environ)
-    return rsp().json(**{k: v.values(int) for k, v in req.query.items()})
+    return rsp().json(**{k: [int(e) for e in v] for k, v in req.query.items()})
 
 
 @mt.req.post('/')
 def _(req):
     req = Rexy(req._environ)
-    return rsp().json(**{k: v.value(int) for k, v in req.data.items()})
+    return rsp().json(**{k: [int(e) for e in v] for k, v in req.data.items()})
 
 
 @mt.req.post('/files')
@@ -28,7 +28,7 @@ def _(req):
     req = Rexy(req._environ)
     d = {}
     for k, v in req.data.items():
-        for name, typ, fp in v.files():
+        for name, typ, fp in v:
             print(name, type(name))
             d.setdefault(k, []).append(name)
     return rsp().json(**d)
@@ -54,13 +54,15 @@ def test_query_multi():
 
 
 def test_data():
+    r = client.post('http://localhost:5000', data={'a': 1})
+    assert r.status_code == 200
+    assert r.json() == {'a': [1]}
+
+
+def test_data_multi():
     r = client.post('http://localhost:5000', data={'a': [1, 2]})
     assert r.status_code == 200
-    assert r.json() == {'a': 1}
-
-    r = client.post('http://localhost:5000', data={'a': 100})
-    assert r.status_code == 200
-    assert r.json() == {'a': 100}
+    assert r.json() == {'a': [1, 2]}
 
 
 def test_data_files():

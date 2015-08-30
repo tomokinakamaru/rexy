@@ -3,7 +3,6 @@
 import cgi
 from functools import wraps
 from .environ import Environ
-from .parameter import Group
 
 try:
     from urlparse import parse_qs
@@ -12,7 +11,7 @@ except ImportError:
 
 
 class Rexy(object):
-    ParameterGroup = Group
+    ParameterGroup = dict
 
     def __init__(self, environ):
         self._env = Environ(environ)
