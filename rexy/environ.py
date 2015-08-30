@@ -1,6 +1,6 @@
 # coding:utf-8
 
-import datetime
+from datetime import datetime
 
 try:
     from urlparse import parse_qs
@@ -16,6 +16,14 @@ class Environ(object):
     def environ(self):
         return self._environ
 
+    @staticmethod
+    def parse_qs(qs):
+        return parse_qs(qs)
+
+    @staticmethod
+    def parse_dt(s):
+        return datetime.strptime(s, '%a, %d %b %Y %H:%M:%S GMT')
+
     def get(self, key, default=None):
         return self.environ.get(key, default)
 
@@ -27,14 +35,11 @@ class Environ(object):
 
     def get_qs(self, key, default=None):
         v = self.get(key)
-        return default if v is None else parse_qs(v)
+        return default if v is None else self.parse_qs(v)
 
     def get_dt(self, key, default=None):
         v = self.get(key)
-        if v is None:
-            return default
-        else:
-            return datetime.strptime(s, '%a, %d %b %Y %H:%M:%S GMT')
+        return default if v is None else self.parse_dt(v)
 
     @property
     def method(self):
