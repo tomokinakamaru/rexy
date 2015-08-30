@@ -1,0 +1,71 @@
+# coding;utf-8
+
+from functools import wraps
+from .environ import Environ
+from .parameter import Group as ParamGroup
+
+
+class Rexy(object):
+    def __init__(self, environ):
+        self._environ = Environ(environ)
+        self._cache = {}
+
+    def __cache(f):
+        @wraps(f)
+        def _(self):
+            if f.__name__ not in self._cache:
+                self._cache[f.__name__] = f(self)
+
+            return self._cache[f.__name__]
+        return _
+
+    @property
+    def env(self):
+        return self._environ
+
+    @property
+    @__cache
+    def body(self):
+        clength = int(self.env.content_length or 0)
+        return self.env.wsgi_input.read(clength)
+
+    @property
+    @__cache
+    def fieldstorage(self):
+        return cgi.FieldStorage(environ=self.env.environ,
+                                fp=self.env.wsgi_input)
+
+    @property
+    @__cache
+    def query(self):
+        return ParamGroup(**parse_qs(self.env.query_string or ''))
+
+    @property
+    @__cache
+    def cookie(self):
+        return ParamGroup(**parse_qs(self.env.http_cookie or ''))
+
+    @property
+    @__cache
+    def data(self):
+        mapping = {}
+        if isinstance(self.fieldstorage.value, list):
+            for k in self.fieldstorage:
+                obj = self.fieldstorage[k]
+                if isinstance(obj, list):
+                    maping[k] = []
+                    for fs in obj:
+                        if fs.filename is None:
+                            mapping[k].append(fs.value)
+
+                        else:
+                            mapping[k].append((fs.filename, fs.type, fs.file))
+
+                else:
+                    if obj.filename is None:
+                        mapping[k] = [obj.value]
+
+                    else:
+                        mapping[k] = [(fs.filename, fs.type, fs.file)]
+
+        return ParamGroup(**mapping)
