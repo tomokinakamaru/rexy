@@ -44,10 +44,6 @@ class Rexy(object):
                                 fp=self.env.wsgi_input)
 
     @cachedproperty
-    def path(self):
-        return (self.env.path_info or '').lstrip('/').split('/')
-
-    @cachedproperty
     def query(self):
         qs = self.env.query_string or ''
         return self.ParameterGroup(**self.env.parse_qs(qs))

@@ -24,12 +24,6 @@ def _(req):
     return rsp().json(**{k: [e for e in v.values(int)] for k, v in q.items()})
 
 
-@mt.req.get('/this/is/path/test')
-@use_rexy
-def _(req):
-    return rsp().json(path=req.path)
-
-
 @mt.req.post('/')
 @use_rexy
 def _(req):
@@ -61,12 +55,6 @@ def test_query_multi():
     r = client.get('http://localhost:5000?a=1&a=2')
     assert r.status_code == 200
     assert r.json() == {'a': [1, 2]}
-
-
-def test_path():
-    r = client.get('http://localhost:5000/this/is/path/test')
-    assert r.status_code == 200
-    assert r.json() == {'path': ['this', 'is', 'path', 'test']}
 
 
 def test_data():
