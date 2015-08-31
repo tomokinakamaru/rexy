@@ -2,47 +2,29 @@
 
 
 class Array(object):
-    def __init__(self, *items):
-        self.__items = items
+    def __init__(self, key, *items):
+        self._key = key
+        self._items = items
         self._has_default = False
 
-    def __contains__(self, key):
-        return item in self.__items
+    @property
+    def key(self):
+        return self._key
+
+    def __contains__(self, item):
+        return item in self._items
 
     def __len__(self):
-        return item in self.__items
+        return len(self._items)
 
     def __iter__(self):
         return self.items()
 
     def setdefault(self, *defaults):
-        if not self._has_default and len(self.__items) == 0:
+        if not self._has_default and len(self._items) == 0:
             self._has_default = True
-            self.__items = defaults
-
-    def items(self, f=None):
-        if self._has_default:
-            for i in self.__items:
-                yield i
-
-        else:
-            if len(self.__items) == 0:
-                raise Exception('not given')
-
-            else:
-                for v in self.__items:
-                    yield v if f is None else f(v)
-
-    def item(self, f=None):
-        try:
-            return next(self.items())
-
-        except StopIteration:
-            if self._has_default:
-                raise Exception('not given')
-
-            else:
-                raise
+            self._items = defaults
+        return self
 
     @staticmethod
     def is_file(item):
@@ -55,31 +37,66 @@ class Array(object):
     @staticmethod
     def require_file(item):
         if not Array.is_file(item):
-            raise Exception('not a file')
+            raise NotFileItem()
         return item
 
     @staticmethod
     def require_value(item):
         if not Array.is_value(item):
-            raise Exception('not a value')
+            raise NotValueItem()
         return item
 
-    def files(self, f=None):
-        if f is None:
-            return self.items(Array.require_file)
+    def items(self, f=lambda v: v):
+        if self._has_default:
+            for i in self._items:
+                yield i
 
         else:
-            return self.items(lambda v: f(*Array.require_file(v)))
+            if len(self._items) == 0:
+                raise NoItemExists(self._key)
 
-    def values(self, f=None):
-        if f is None:
-            return self.items(Array.require_value)
+            else:
+                for v in self._items:
+                    try:
+                        yield f(v)
 
-        else:
-            return self.items(lambda v: f(*Array.require_value(v)))
+                    except NotFileItem:
+                        raise NotFileItem(self._key)
 
-    def file(self, f=None):
-        return next(self.files(f))
+                    except NotValueItem:
+                        raise NotValueItem(self._key)
 
-    def value(self, f=None):
-        return next(self.values(f))
+    def item(self, f=lambda v: v):
+        try:
+            return next(self.items(f))
+
+        except StopIteration as e:
+            if self._has_default:
+                raise NoItemExists(self._key)
+
+            else:
+                raise e
+
+    def files(self, f=lambda name, typ, fp: (name, typ, fp)):
+        return self.items(lambda v: f(*Array.require_file(v)))
+
+    def values(self, f=lambda v: v):
+        return self.items(lambda v: f(Array.require_value(v)))
+
+    def file(self, f=lambda name, typ, fp: (name, typ, fp)):
+        return self.item(lambda v: f(*Array.require_file(v)))
+
+    def value(self, f=lambda v: v):
+        return self.item(lambda v: f(Array.require_value(v)))
+
+
+class NoItemExists(Exception):
+    pass
+
+
+class NotFileItem(Exception):
+    pass
+
+
+class NotValueItem(Exception):
+    pass

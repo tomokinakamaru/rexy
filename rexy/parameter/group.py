@@ -20,7 +20,7 @@ class Group(object):
             yield k
 
     def __getitem__(self, key):
-        return self.ItemArray(self.__mapping.get(key, ()))
+        return self.ItemArray(key, *self.__mapping.get(key, ()))
 
     def __getattr__(self, name):
-        return self.__getitem__(self, name)
+        return self.__getitem__(name)
