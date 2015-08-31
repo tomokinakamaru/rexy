@@ -46,7 +46,7 @@ class Array(object):
             raise NotValueItem()
         return item
 
-    def items(self, f=lambda v: v):
+    def items(self, parser=lambda v: v):
         if self._has_default:
             for i in self._items:
                 yield i
@@ -66,7 +66,7 @@ class Array(object):
                     except NotValueItem:
                         raise NotValueItem(self._key)
 
-    def item(self, f=lambda v: v):
+    def item(self, parser=lambda v: v):
         try:
             return next(self.items(f))
 
@@ -77,16 +77,16 @@ class Array(object):
             else:
                 raise e
 
-    def files(self, f=lambda name, typ, fp: (name, typ, fp)):
+    def files(self, parser=lambda name, typ, fp: (name, typ, fp)):
         return self.items(lambda v: f(*Array.require_file(v)))
 
-    def values(self, f=lambda v: v):
+    def values(self, parser=lambda v: v):
         return self.items(lambda v: f(Array.require_value(v)))
 
-    def file(self, f=lambda name, typ, fp: (name, typ, fp)):
+    def file(self, parser=lambda name, typ, fp: (name, typ, fp)):
         return self.item(lambda v: f(*Array.require_file(v)))
 
-    def value(self, f=lambda v: v):
+    def value(self, parser=lambda v: v):
         return self.item(lambda v: f(Array.require_value(v)))
 
 
