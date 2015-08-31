@@ -3,6 +3,7 @@
 import cgi
 from functools import wraps
 from .environ import Environ
+from .parameter import Group
 
 
 class cachedproperty(object):
@@ -27,6 +28,8 @@ class cachedproperty(object):
 
 
 class Rexy(object):
+    ParameterGroup = Group
+
     def __init__(self, environ):
         self._env = Environ(environ)
         self._cache = {}
@@ -36,17 +39,28 @@ class Rexy(object):
         return self._env
 
     @cachedproperty
-    def body(self):
-        clength = int(self.env.content_length or 0)
-        return self.env.wsgi_input.read(clength)
-
-    @cachedproperty
     def fieldstorage(self):
         return cgi.FieldStorage(environ=self.env.environ,
                                 fp=self.env.wsgi_input)
 
     @cachedproperty
-    def parsed_body(self):
+    def path(self):
+        return (self.path_info or '').lstrip('/').split('/')
+
+    @staticmethod
+    def parameter_group_from_qs(qs):
+        return self.ParameterGroup(self.env.parse_qs(qs or ''))
+
+    @cachedproperty
+    def query(self):
+        return self.parameter_group_from_qs(self.env.query_string)
+
+    @cachedproperty
+    def cookie(self):
+        return self.parameter_group_from_qs(self.env.http_cookie)
+
+    @cachedproperty
+    def body(self):
         mapping = {}
         if isinstance(self.fieldstorage.value, list):
             for k in self.fieldstorage:
@@ -66,4 +80,4 @@ class Rexy(object):
 
                     else:
                         mapping[k] = [(obj.filename, obj.type, obj.file)]
-        return mapping
+        return self.ParameterGroup(**mapping)
