@@ -45,19 +45,17 @@ class Rexy(object):
 
     @cachedproperty
     def path(self):
-        return (self.path_info or '').lstrip('/').split('/')
-
-    @staticmethod
-    def parameter_group_from_qs(qs):
-        return self.ParameterGroup(self.env.parse_qs(qs or ''))
+        return (self.env.path_info or '').lstrip('/').split('/')
 
     @cachedproperty
     def query(self):
-        return self.parameter_group_from_qs(self.env.query_string)
+        qs = self.env.query_string or ''
+        return self.ParameterGroup(**self.env.parse_qs(qs))
 
     @cachedproperty
     def cookie(self):
-        return self.parameter_group_from_qs(self.env.http_cookie)
+        qs = self.env.http_cookie or ''
+        return self.ParameterGroup(**self.env.parse_qs(qs))
 
     @cachedproperty
     def body(self):

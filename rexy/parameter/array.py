@@ -1,7 +1,9 @@
 # coding:utf-8
 
+from collections import Sequence
 
-class Array(object):
+
+class Array(Sequence):
     def __init__(self, key, *items):
         self._key = key
         self._items = items
@@ -19,6 +21,9 @@ class Array(object):
 
     def __iter__(self):
         return self.items()
+
+    def __getitem__(self, index):
+        return self._items[index]
 
     def setdefault(self, *defaults):
         if not self._has_default and len(self._items) == 0:
@@ -58,7 +63,7 @@ class Array(object):
             else:
                 for v in self._items:
                     try:
-                        yield f(v)
+                        yield parser(v)
 
                     except NotFileItem:
                         raise NotFileItem(self._key)
@@ -68,7 +73,7 @@ class Array(object):
 
     def item(self, parser=lambda v: v):
         try:
-            return next(self.items(f))
+            return next(self.items(parser))
 
         except StopIteration as e:
             if self._has_default:
@@ -78,16 +83,16 @@ class Array(object):
                 raise e
 
     def files(self, parser=lambda name, typ, fp: (name, typ, fp)):
-        return self.items(lambda v: f(*Array.require_file(v)))
+        return self.items(lambda v: parser(*Array.require_file(v)))
 
     def values(self, parser=lambda v: v):
-        return self.items(lambda v: f(Array.require_value(v)))
+        return self.items(lambda v: parser(Array.require_value(v)))
 
     def file(self, parser=lambda name, typ, fp: (name, typ, fp)):
-        return self.item(lambda v: f(*Array.require_file(v)))
+        return self.item(lambda v: parser(*Array.require_file(v)))
 
     def value(self, parser=lambda v: v):
-        return self.item(lambda v: f(Array.require_value(v)))
+        return self.item(lambda v: parser(Array.require_value(v)))
 
 
 class NoItemExists(Exception):

@@ -1,9 +1,10 @@
 # coding:utf-8
 
+from collections import Mapping
 from .array import Array
 
 
-class Group(object):
+class Group(Mapping):
     ItemArray = Array
 
     def __init__(self, **mapping):
