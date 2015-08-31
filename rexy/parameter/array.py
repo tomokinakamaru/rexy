@@ -1,6 +1,7 @@
 # coding:utf-8
 
 from collections import Sequence
+from .file import File
 
 
 class Array(Sequence):
@@ -33,7 +34,7 @@ class Array(Sequence):
 
     @staticmethod
     def is_file(item):
-        return isinstance(item, tuple)
+        return isinstance(item, File)
 
     @staticmethod
     def is_value(item):
@@ -82,14 +83,14 @@ class Array(Sequence):
             else:
                 raise e
 
-    def files(self, parser=lambda name, typ, fp: (name, typ, fp)):
-        return self.items(lambda v: parser(*Array.require_file(v)))
+    def files(self, parser=lambda f: f):
+        return self.items(lambda v: parser(Array.require_file(v)))
 
     def values(self, parser=lambda v: v):
         return self.items(lambda v: parser(Array.require_value(v)))
 
-    def file(self, parser=lambda name, typ, fp: (name, typ, fp)):
-        return self.item(lambda v: parser(*Array.require_file(v)))
+    def file(self, parser=lambda f: f):
+        return self.item(lambda v: parser(Array.require_file(v)))
 
     def value(self, parser=lambda v: v):
         return self.item(lambda v: parser(Array.require_value(v)))

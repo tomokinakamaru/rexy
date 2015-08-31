@@ -35,7 +35,7 @@ def _(req):
 @use_rexy
 def _(req):
     b = req.body
-    return rsp().json(**{k: [e[0] for e in v.files()] for k, v in b.items()})
+    return rsp().json(**{k: [e.name for e in v.files()] for k, v in b.items()})
 
 
 @mt.exc.route(Exception)

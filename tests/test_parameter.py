@@ -1,12 +1,12 @@
 # coding:utf-8
 
-from rexy.parameter import Group, NoItemExists, NotFileItem, NotValueItem
+from rexy.parameter import Group, NoItemExists, NotFileItem, NotValueItem, File
 
 
 grp = Group(a=('a'),
             b=('a', 'b'),
-            c=(('a.png', 'image/png', 'fp'),),
-            d=(('a.png', 'image/png', 'fp'), ('a.png', 'image/png', 'fp')),
+            c=(File(None),),
+            d=(File(None), File(None)),
             e=('a', ('a.png', 'image/png', 'fp')))
 
 
@@ -38,7 +38,7 @@ def test_array_access():
     assert grp.a.value() == 'a'
     assert grp.b.value() == 'a'
     assert grp.a.item() == 'a'
-    assert grp.d.file() == ('a.png', 'image/png', 'fp')
+    assert isinstance(grp.d.file(), File)
     raises(lambda: grp.a.file(), NotFileItem, 'a')
     raises(lambda: grp.c.value(), NotValueItem, 'c')
     raises(lambda: grp.f.value(), NoItemExists, 'f')

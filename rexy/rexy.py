@@ -3,7 +3,7 @@
 import cgi
 from functools import wraps
 from .environ import Environ
-from .parameter import Group
+from .parameter import Group, File
 
 
 class cachedproperty(object):
@@ -66,12 +66,12 @@ class Rexy(object):
                             mapping[k].append(fs.value)
 
                         else:
-                            mapping[k].append((fs.filename, fs.type, fs.file))
+                            mapping[k].append(File(fs))
 
                 else:
                     if obj.filename is None:
                         mapping[k] = [obj.value]
 
                     else:
-                        mapping[k] = [(obj.filename, obj.type, obj.file)]
+                        mapping[k] = [File(obj)]
         return self.ParameterGroup(**mapping)
