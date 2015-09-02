@@ -129,6 +129,9 @@ class Strings(NonFiles):
     def longer(self, border):
         return self.apply(self._longer, border)
 
+    def of_bool(self):
+        return self.to(Bools)
+
     def of_int(self):
         return self.to(Ints)
 
@@ -166,6 +169,15 @@ class Json(NonFiles):
 
         else:
             return Group(d)
+
+
+class Bools(NonFiles):
+    @staticmethod
+    def prefilter(v):
+        if v not in ('true', 'false'):
+            raise ValueError('Must be true or false')
+
+        return v == 'true'
 
 
 class Ints(Comparables):
