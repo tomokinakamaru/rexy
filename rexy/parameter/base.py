@@ -39,7 +39,7 @@ class Array(object):
         def _(self, *args, **kwargs):
             return self.apply(f, *args, **kwargs)
 
-        setattr(cls, f.__name__, MethodType(_, None, cls))
+        setattr(cls, f.__name__, _)
         return f
 
     @classmethod
@@ -47,7 +47,7 @@ class Array(object):
         def _(self, *args, **kwargs):
             return self.to(arr_cls, *args, **kwargs)
 
-        setattr(cls, name, MethodType(_, None, cls))
+        setattr(cls, name, _)
         return arr_cls
 
     def items(self):
