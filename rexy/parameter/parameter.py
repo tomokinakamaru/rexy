@@ -1,6 +1,7 @@
 # coding:utf-8
 
 import json
+from datetime import datetime
 from .base import Array, NonFiles, Comparables
 
 try:
@@ -28,17 +29,17 @@ class Group(object):
             obj = self._mapping[key]
 
         except:
-            return Items((e for e in []))
+            return Items(key, (e for e in []))
 
         else:
             if isinstance(obj, dict):
-                return self.__cls__(obj)
+                return self.__class__(obj)
 
             elif isinstance(obj, (list, tuple)):
-                return self.__cls__((e for e in obj))
+                return Items(key, (e for e in obj))
 
             else:
-                return self.__cls__((e for e in (obj,)))
+                return Items(key, (e for e in (obj,)))
 
     def __getattr__(self, name):
         return self.__getitem__(name)
@@ -60,7 +61,7 @@ class Files(Array):
     @staticmethod
     def prefilter(v):
         if not self.is_fieldstorage(v):
-            raise TypeError('Must be a file')
+            raise TypeError('Must be file')
 
         return v
 
@@ -90,7 +91,7 @@ class Strings(NonFiles):
     @staticmethod
     def prefilter(v):
         if not isinstance(v, (bytes, unicode)):
-            raise TypeError()
+            raise TypeError('Must be string')
 
         return v
 
@@ -103,30 +104,30 @@ class Strings(NonFiles):
         return v.decode(encoding) if isinstance(v, bytes) else v
 
     def encode(self, encoding='utf-8'):
-        return self.where(self._encode, encoding)
+        return self.apply(self._encode, encoding)
 
     def decode(self, encoding='utf-8'):
-        return self.where(self._decode, encoding)
+        return self.apply(self._decode, encoding)
 
     @staticmethod
-    def _len_le(v, border):
+    def _shorter(v, border):
         if border < len(v):
             raise ValueError('Too long (max length: {})'.format(border))
 
         return v
 
     @staticmethod
-    def _len_ge(v, border):
+    def _longer(v, border):
         if len(v) < border:
             raise ValueError('Too short (min length: {})'.format(border))
 
         return v
 
-    def len_le(self, border):
-        return self.apply(self._len_le, border)
+    def shorter(self, border):
+        return self.apply(self._shorter, border)
 
-    def len_ge(self, border):
-        return self.apply(self._len_ge, border)
+    def longer(self, border):
+        return self.apply(self._longer, border)
 
     def of_int(self):
         return self.to(Ints)
@@ -141,44 +142,67 @@ class Strings(NonFiles):
         return self.to(DateTimes, fmt)
 
     def of_csv(self, separator=',', strip=True):
-        return self.to(Csv)
+        return self.to(Csv, separator, strip)
 
     def of_json(self):
-        return self.to(Json)
+        return self.decode().to(Json)
 
 
 class Csv(NonFiles):
     @staticmethod
     def prefilter(v, separator, strip):
         g = (e.strip() if strip else e for e in v.split(separator))
-        return Strings(g)
+        return Strings(None, g)
 
 
 class Json(NonFiles):
     @staticmethod
     def prefilter(v):
-        return Group(json.loads(v))
+        try:
+            d = json.loads(v)
+
+        except ValueError:
+            raise ValueError('Invalid json')
+
+        else:
+            return Group(d)
 
 
 class Ints(Comparables):
     @staticmethod
     def prefilter(v):
-        return int(v)
+        try:
+            return int(v)
+
+        except ValueError:
+            raise ValueError('Must be int')
 
 
 class Floats(Comparables):
     @staticmethod
     def prefilter(v):
-        return float(v)
+        try:
+            return float(v)
+
+        except ValueError:
+            raise ValueError('Must be number')
 
 
 class Dates(Comparables):
     @staticmethod
     def prefilter(v, fmt):
-        return datetime.strptime(v, fmt).date()
+        try:
+            return datetime.strptime(v, fmt).date()
+
+        except ValueError:
+            raise ValueError('Must be formatted as {}'.format(fmt))
 
 
 class DateTimes(Comparables):
     @staticmethod
     def prefilter(v, fmt):
-        return datetime.strptime(v, fmt)
+        try:
+            return datetime.strptime(v, fmt)
+
+        except ValueError:
+            raise ValueError('Must be formatted as {}'.format(fmt))

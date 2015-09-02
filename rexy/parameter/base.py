@@ -6,8 +6,9 @@ from types import MethodType
 
 
 class Array(object):
-    def __init__(self, src):
-        self._src = src
+    def __init__(self, key, src, *args, **kwargs):
+        self._key = key
+        self._src = (self.prefilter(e, *args, **kwargs) for e in src)
         self._default_src = None
 
     @staticmethod
@@ -29,7 +30,7 @@ class Array(object):
         return self
 
     def to(self, cls, *args, **kwargs):
-        arr = cls(self._src, *args, **kwargs)
+        arr = cls(self._key, self._src, *args, **kwargs)
         arr.setdefault(self._default_src)
         return arr
 
@@ -54,12 +55,12 @@ class Array(object):
             tup = tuple(self._src)
 
         except Exception as e:
-            raise InvalidItemFound(e)
+            raise InvalidItemFound(self._key, e)
 
         else:
             if len(tup) == 0:
                 if self._default_src is None:
-                    raise NoItemFound()
+                    raise NoItemFound(self._key)
 
                 else:
                     return tuple(self._default_src)
@@ -73,14 +74,17 @@ class Array(object):
 
         except StopIteration:
             if self._default_src is None:
-                raise NoItemFound()
+                raise NoItemFound(self._key)
 
             else:
                 try:
                     return next(self._default_src)
 
                 except StopIteration:
-                    raise NoItemFound()
+                    raise NoItemFound(self._key)
+
+        except Exception as e:
+            raise InvalidItemFound(self._key, e)
 
 
 class NoItemFound(Exception):
@@ -91,14 +95,7 @@ class InvalidItemFound(Exception):
     pass
 
 
-class NonFiles(Prefiltered):
-    @staticmethod
-    def prefilter(v):
-        if self.is_fieldstorage(v):
-            raise TypeError('Must be non-file')
-
-        return v
-
+class NonFiles(Array):
     @staticmethod
     def _in_choice(v, choices):
         if v not in choices:
@@ -119,19 +116,19 @@ class Comparables(NonFiles):
         return v
 
     def lt(self, border):
-        return self.apply(self._cmp(operator.lt, border))
+        return self.apply(self._cmp, operator.lt, border)
 
     def le(self, border):
-        return self.apply(self._cmp(operator.le, border))
+        return self.apply(self._cmp, operator.le, border)
 
     def gt(self, border):
-        return self.apply(self._cmp(operator.gt, border))
+        return self.apply(self._cmp, operator.gt, border)
 
     def ge(self, border):
-        return self.apply(self._cmp(operator.ge, border))
+        return self.apply(self._cmp, operator.ge, border)
 
     def ne(self, border):
-        return self.apply(self._cmp(operator.ne, border))
+        return self.apply(self._cmp, operator.ne, border)
 
     def eq(self, border):
-        return self.apply(self._cmp(operator.eq, border))
+        return self.apply(self._cmp, operator.eq, border)

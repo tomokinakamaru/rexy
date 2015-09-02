@@ -44,12 +44,12 @@ class Rexy(object):
     @cachedproperty
     def query(self):
         qs = self.env.query_string or ''
-        return Group(**self.env.parse_qs(qs))
+        return Group(self.env.parse_qs(qs))
 
     @cachedproperty
     def cookie(self):
         qs = self.env.http_cookie or ''
-        return Group(**self.env.parse_qs(qs))
+        return Group(self.env.parse_qs(qs))
 
     @cachedproperty
     def body(self):
@@ -64,7 +64,7 @@ class Rexy(object):
                             mapping[k].append(fs.value)
 
                         else:
-                            mapping[k].append(File(fs))
+                            mapping[k].append(fs)
 
                 else:
                     if obj.filename is None:
@@ -72,4 +72,4 @@ class Rexy(object):
 
                     else:
                         mapping[k] = obj
-        return Group(**mapping)
+        return Group(mapping)
