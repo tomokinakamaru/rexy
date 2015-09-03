@@ -104,12 +104,53 @@ def test_strings_parsing():
 def test_ints():
     arr = Ints('key', (e for e in [1, 2]))
     arr.le(2).items() == (1, 2)
-
     arr = Ints('key', (e for e in [1, 2]))
     raises(lambda: arr.le(1).items(), InvalidItemFound, 'key')
 
     arr = Ints('key', (e for e in [1, 2]))
     arr.lt(3).items() == (1, 2)
-
     arr = Ints('key', (e for e in [1, 2]))
     raises(lambda: arr.lt(2).items(), InvalidItemFound, 'key')
+
+    arr = Ints('key', (e for e in [1, 2]))
+    arr.ge(1).items() == (1, 2)
+    arr = Ints('key', (e for e in [1, 2]))
+    raises(lambda: arr.ge(2).items(), InvalidItemFound, 'key')
+
+    arr = Ints('key', (e for e in [1, 2]))
+    arr.gt(0).items() == (1, 2)
+    arr = Ints('key', (e for e in [1, 2]))
+    raises(lambda: arr.gt(1).items(), InvalidItemFound, 'key')
+
+    arr = Ints('key', (e for e in [1, 2]))
+    arr.ne(0).items() == (1, 2)
+    arr = Ints('key', (e for e in [1, 2]))
+    raises(lambda: arr.ne(1).items(), InvalidItemFound, 'key')
+
+
+def test_csv():
+    grp = Group(dict(a='1, 2, 3, 4'))
+    assert grp.a.values().of_csv().item().of_int().items() == (1, 2, 3, 4)
+
+
+def test_json():
+    grp = Group(dict(a='{"x": 1, "y": true, "z": null}'))
+    assert grp.a.values().of_json().item().x.values().of_int().item() == 1
+    assert grp.a.values().of_json().item().y.values().of_bool().item() == True
+
+
+def test_invalid_parsing():
+    grp = Group(dict(a='1',
+                     b='1.1',
+                     c='2000/01/01',
+                     d='2000/01/01 12:34:56',
+                     e='1, 2, 3',
+                     f='{"a": 1, "b": "test"}',
+                     g='true'))
+
+    raises(grp.b.values().of_int().item, InvalidItemFound, 'b')
+    raises(grp.a.values().of_bool().item, InvalidItemFound, 'a')
+    raises(grp.e.values().of_float().item, InvalidItemFound, 'e')
+    raises(grp.c.values().of_datetime().item, InvalidItemFound, 'c')
+    raises(grp.d.values().of_date().item, InvalidItemFound, 'd')
+    raises(grp.e.values().of_json().item, InvalidItemFound, 'e')

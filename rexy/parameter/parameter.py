@@ -1,5 +1,6 @@
 # coding:utf-8
 
+import cgi
 import json
 from datetime import datetime
 from .base import Array, NonFiles, Comparables
@@ -60,7 +61,7 @@ class Items(Array):
 class Files(Array):
     @staticmethod
     def prefilter(v):
-        if not self.is_fieldstorage(v):
+        if not isinstance(v, cgi.FieldStorage):
             raise TypeError('Must be file')
 
         return v
@@ -163,15 +164,26 @@ class Json(NonFiles):
     def prefilter(v):
         try:
             d = json.loads(v,
+                           object_hook=Json._json_object_hook,
                            parse_float=lambda v: v,
-                           parse_int=lambda v: v,
-                           parse_constant=lambda v: v)
+                           parse_int=lambda v: v)
 
         except ValueError:
             raise ValueError('Invalid json')
 
         else:
             return Group(d)
+
+    @staticmethod
+    def _json_object_hook(d):
+        for k, v in d.items():
+            if isinstance(v, bool):
+                d[k] = 'true' if v else 'false'
+
+            elif v is None:
+                d[k] = 'null'
+
+        return d
 
 
 class Bools(NonFiles):

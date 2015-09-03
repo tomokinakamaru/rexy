@@ -1,5 +1,6 @@
 # coding:utf-8
 
+import json
 import requests
 import traceback
 from mapletree import MapleTree, rsp
@@ -48,6 +49,35 @@ def _(req):
     return rsp().json(**d)
 
 
+@mt.req.post('/files')
+@use_rexy
+def _(req):
+    d = {k: req.body[k].files().items() for k in req.body}
+    d = {k: [e.filename for e in v] for k, v in d.items()}
+    return rsp().json(**d)
+
+
+@mt.req.post('/files/text')
+@use_rexy
+def _(req):
+    return rsp().json(message=(req.body.a
+                               .files()
+                               .mimetype('text')
+                               .values()
+                               .item()))
+
+
+@mt.req.post('/files/text2')
+@use_rexy
+def _(req):
+    msubtype = req.query.t.values().item()
+    return rsp().json(message=(req.body.a
+                               .files()
+                               .mimetype('text', (msubtype, ))
+                               .values()
+                               .item()))
+
+
 def test_query():
     c = Cli()
     assert c('get', '/', params={'a': 1}) == {'a': [1]}
@@ -57,3 +87,22 @@ def test_body_values():
     c = Cli()
     assert c('post', '/', data={'a': 1}) == {'a': [1]}
     assert c('post', '/', data={'a': [1, 2]}) == {'a': [1, 2]}
+
+
+def test_body_files():
+    c = Cli()
+    with open('README.rst') as f:
+        assert c('post', '/files', files={'a': f}) == {'a': ['README.rst']}
+
+
+def test_body_files():
+    c = Cli()
+    with open('LICENSE') as f:
+        r = c('post', '/files/text', files={'a': f}).get('message')
+        f.seek(0)
+        assert r == f.read()
+
+    with open('LICENSE') as f:
+        r = c('post', '/files/text2?t=plain', files={'a': f}).get('message')
+        f.seek(0)
+        assert r == f.read()

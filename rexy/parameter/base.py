@@ -1,6 +1,5 @@
 # coding:utf-8
 
-import cgi
 import operator
 from types import MethodType
 
@@ -14,10 +13,6 @@ class Array(object):
     @staticmethod
     def prefilter(v):
         raise NotImplemented()
-
-    @staticmethod
-    def is_fieldstorage(v):
-        return isinstance(v, cgi.FieldStorage)
 
     def setdefault(self, default_src):
         if self._default_src is None:
@@ -129,6 +124,3 @@ class Comparables(NonFiles):
 
     def ne(self, border):
         return self.apply(self._cmp, operator.ne, border)
-
-    def eq(self, border):
-        return self.apply(self._cmp, operator.eq, border)
