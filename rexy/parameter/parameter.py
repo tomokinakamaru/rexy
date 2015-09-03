@@ -145,7 +145,7 @@ class Strings(NonFiles):
         return self.to(DateTimes, fmt)
 
     def of_csv(self, separator=',', strip=True):
-        return self.to(Csv, separator, strip)
+        return self.to(Csv, self._key, separator, strip)
 
     def of_json(self):
         return self.decode().to(Json)
@@ -153,16 +153,19 @@ class Strings(NonFiles):
 
 class Csv(NonFiles):
     @staticmethod
-    def prefilter(v, separator, strip):
+    def prefilter(v, key, separator, strip):
         g = (e.strip() if strip else e for e in v.split(separator))
-        return Strings(None, g)
+        return Strings(key, g)
 
 
 class Json(NonFiles):
     @staticmethod
     def prefilter(v):
         try:
-            d = json.loads(v)
+            d = json.loads(v,
+                           parse_float=lambda v: v,
+                           parse_int=lambda v: v,
+                           parse_constant=lambda v: v)
 
         except ValueError:
             raise ValueError('Invalid json')
