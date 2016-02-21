@@ -16,8 +16,8 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
     description='',
-    dependency_links=[
-        'http://github.com/tomokinakamaru/wexy/tarball/master'
+    install_requires=[
+        'wexy==1.0.0'
     ],
     license='MIT',
     long_description=long_description,
