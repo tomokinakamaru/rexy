@@ -16,6 +16,9 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
     description='',
+    dependency_links=[
+        'http://github.com/tomokinakamaru/wexy/tarball/master'
+    ],
     license='MIT',
     long_description=long_description,
     name='rexy',

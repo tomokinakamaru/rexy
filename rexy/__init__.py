@@ -1,3 +1,3 @@
 # coding:utf-8
 
-from .rexy import Rexy, cachedproperty
+from .rexy import Rexy

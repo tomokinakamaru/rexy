@@ -1,57 +1,41 @@
 # coding:utf-8
 
 import cgi
-from functools import wraps
-from .environ import Environ
-from .parameter import Group
+from wexy import Wexy
+from .cached import cached
+from .group import Group
 
-
-class cachedproperty(object):
-    def __init__(self, f):
-        self._f = f
-
-    def __get__(self, instance, owner):
-        if instance is None:
-            return self
-
-        else:
-            if self._f.__name__ not in instance._cache:
-                instance._cache[self._f.__name__] = self._f(instance)
-
-            return instance._cache[self._f.__name__]
-
-    def __set__(self, instance, value):
-        raise AttributeError("can't set attribute")
-
-    def __delete__(self, instance):
-        del instance._cache[self._f.__name__]
+try:
+    from urlparse import parse_qs
+except ImportError:
+    from urllib.parse import parse_qs
 
 
 class Rexy(object):
     def __init__(self, environ):
-        self._env = Environ(environ)
+        self._environ = Wexy(environ)
         self._cache = {}
 
     @property
-    def env(self):
-        return self._env
+    def environ(self):
+        return self._environ
 
-    @cachedproperty
+    @cached
     def fieldstorage(self):
-        return cgi.FieldStorage(environ=self.env.environ,
-                                fp=self.env.wsgi_input)
+        return cgi.FieldStorage(environ=self.environ.environ,
+                                fp=self.environ.wsgi_input)
 
-    @cachedproperty
+    @cached
     def query(self):
-        qs = self.env.query_string or ''
-        return Group(self.env.parse_qs(qs))
+        qs = self.environ.query_string or ''
+        return Group(parse_qs(qs))
 
-    @cachedproperty
+    @cached
     def cookie(self):
-        qs = self.env.http_cookie or ''
-        return Group(self.env.parse_qs(qs))
+        qs = self.environ.http_cookie or ''
+        return Group(parse_qs(qs))
 
-    @cachedproperty
+    @cached
     def body(self):
         mapping = {}
         if isinstance(self.fieldstorage.value, list):
@@ -68,8 +52,9 @@ class Rexy(object):
 
                 else:
                     if obj.filename is None:
-                        mapping[k] = obj.value
+                        mapping[k] = [obj.value]
 
                     else:
-                        mapping[k] = obj
+                        mapping[k] = [obj]
+
         return Group(mapping)

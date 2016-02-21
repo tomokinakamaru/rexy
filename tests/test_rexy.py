@@ -38,14 +38,17 @@ def _(e):
 @mt.req.get('/')
 @use_rexy
 def _(req):
-    d = {k: req.query[k].values().of_int().items() for k in req.query}
+    'a' in req.query
+    d = {k + '-many': req.query.many(k) for k in req.query}
+    d.update({k + '-one': req.query.one(k) for k in req.query})
     return rsp().json(**d)
 
 
 @mt.req.post('/')
 @use_rexy
 def _(req):
-    d = {k: req.body[k].values().of_int().items() for k in req.body}
+    d = {k + '-many': req.body.many(k) for k in req.body}
+    d.update({k + '-one': req.body.one(k) for k in req.body})
     return rsp().json(**d)
 
 
@@ -57,52 +60,12 @@ def _(req):
     return rsp().json(**d)
 
 
-@mt.req.post('/files/text')
-@use_rexy
-def _(req):
-    return rsp().json(message=(req.body.a
-                               .files()
-                               .mimetype('text')
-                               .values()
-                               .item()))
-
-
-@mt.req.post('/files/text2')
-@use_rexy
-def _(req):
-    msubtype = req.query.t.values().item()
-    return rsp().json(message=(req.body.a
-                               .files()
-                               .mimetype('text', (msubtype, ))
-                               .values()
-                               .item()))
-
-
 def test_query():
     c = Cli()
-    assert c('get', '/', params={'a': 1}) == {'a': [1]}
+    assert c('get', '/', params={'a': 1}) == {'a-many': ['1'], 'a-one': '1'}
 
 
 def test_body_values():
     c = Cli()
-    assert c('post', '/', data={'a': 1}) == {'a': [1]}
-    assert c('post', '/', data={'a': [1, 2]}) == {'a': [1, 2]}
-
-
-def test_body_files():
-    c = Cli()
-    with open('README.rst') as f:
-        assert c('post', '/files', files={'a': f}) == {'a': ['README.rst']}
-
-
-def test_body_files():
-    c = Cli()
-    with open('LICENSE') as f:
-        r = c('post', '/files/text', files={'a': f}).get('message')
-        f.seek(0)
-        assert r == f.read()
-
-    with open('LICENSE') as f:
-        r = c('post', '/files/text2?t=plain', files={'a': f}).get('message')
-        f.seek(0)
-        assert r == f.read()
+    assert c('post', '/', data={'a': 1}) == {'a-many': ['1'], 'a-one': '1'}
+    assert c('post', '/', data={'a': [1, 2]})['a-many'] == ['1', '2']
